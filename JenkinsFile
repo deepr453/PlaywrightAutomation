@@ -1,0 +1,44 @@
+pipeline {
+  agent any
+
+  tools {
+    nodejs 'NodeJS_18' // Name must match what you configure in Jenkins
+  }
+
+  environment {
+    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = '0'  // Set to '1' if using cached browsers
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/deepr453/PlaywrightAutomation.git'  // Use your Git repo URL
+      }
+    }
+
+    stage('Install dependencies') {
+      steps {
+        sh 'npm ci'
+        sh 'npx playwright install --with-deps'
+      }
+    }
+
+    stage('Run Tests') {
+      steps {
+        sh 'npx playwright test'
+      }
+    }
+
+    stage('Generate HTML Report') {
+      steps {
+        sh 'npx playwright show-report --quiet'
+      }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+    }
+  }
+}
